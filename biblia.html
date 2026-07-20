@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Rutina Bíblica</title>
+
+    <!-- Configuración para poder instalar como App e incluir Icono -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="RutinaBíblica">
+
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-color: #333333;
+            --color-lectura: #2196f3;
+            --color-memoria: #ffb300;
+            --color-estudio: #4caf50;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body { background-color: var(--bg-color); color: var(--text-color); padding: 12px; display: flex; justify-content: center; }
+
+        .container { width: 100%; max-width: 480px; background-color: var(--card-bg); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin-bottom: 90px; }
+
+        header { margin-bottom: 12px; text-align: center; }
+        h1 { font-size: 1.3rem; margin-bottom: 6px; }
+
+        .rutina-rapida { display: flex; gap: 8px; margin-bottom: 12px; }
+        .btn-rutina { flex: 1; padding: 8px; background-color: #2a2a2a; border: 1px solid var(--border-color); color: #fff; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+
+        .leyenda { display: flex; justify-content: space-around; background: #252525; padding: 6px; border-radius: 8px; font-size: 0.75rem; margin-bottom: 12px; }
+        .leyenda-item { display: flex; align-items: center; gap: 4px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+        .search-box { position: relative; margin-bottom: 12px; }
+        .search-input { width: 100%; padding: 10px 12px; background-color: #2a2a2a; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 0.95rem; outline: none; }
+        .search-input:focus { border-color: var(--color-lectura); }
+
+        select { width: 100%; padding: 10px; background-color: #2a2a2a; color: var(--text-color); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; margin-bottom: 12px; }
+
+        .book-header { font-size: 1.1rem; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); }
+
+        .pagination-bar { display: flex; align-items: center; justify-content: space-between; background-color: #252525; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; gap: 5px; }
+        .btn-page { background-color: #333; color: #fff; border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; font-weight: bold; }
+        .btn-page:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .page-select { width: auto; margin-bottom: 0; padding: 4px 8px; font-size: 0.85rem; background-color: #1a1a1a; }
+
+        .chapters-list { display: flex; flex-direction: column; gap: 8px; }
+        .cap-row { background-color: #2a2a2a; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+        .cap-header { display: flex; justify-content: space-between; align-items: center; }
+        .cap-num { font-size: 1rem; font-weight: bold; }
+
+        .fases-container { display: flex; gap: 4px; }
+        .fase-btn { border: none; background-color: #444; color: #aaa; font-size: 0.7rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+        .fase-btn.active-L { background-color: var(--color-lectura); color: white; }
+        .fase-btn.active-M { background-color: var(--color-memoria); color: black; }
+        .fase-btn.active-E { background-color: var(--color-estudio); color: white; }
+
+        .audio-links { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; background-color: #222; padding: 6px 8px; border-radius: 6px; }
+        .audio-item { display: flex; justify-content: space-between; align-items: center; }
+        
+        .btn-file { background: #333; color: #fff; border: 1px solid var(--border-color); padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
+        .btn-play { background: #4caf50; color: #fff; border: none; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
+
+        .player-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1e1e1e; border-top: 1px solid var(--border-color); padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; align-items: center; box-shadow: 0 -4px 10px rgba(0,0,0,0.5); z-index: 100; }
+        .player-info { font-size: 0.8rem; color: var(--text-color); font-weight: bold; }
+        audio { width: 100%; max-width: 480px; height: 32px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Mi Rutina Bíblica</h1>
+    </header>
+
+    <div class="rutina-rapida">
+        <button class="btn-rutina" onclick="irALibro('Salmos')">📋 Salmos (3/día)</button>
+        <button class="btn-rutina" onclick="irALibro('Proverbios')">💡 Proverbios (1/día)</button>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar libro o nº capítulo (ej: Juan o 23)">
+    </div>
+
+    <div class="leyenda">
+        <div class="leyenda-item"><span class="dot" style="background:var(--color-lectura)"></span> L = Lectura</div>
+        <div class="leyenda-item"><span class="dot" style="background:var(--color-memoria)"></span> M = Memoria</div>
+        <div class="leyenda-item"><span class="dot" style="background:var(--color-estudio)"></span> E = Estudio</div>
+    </div>
+
+    <select id="bookSelect"></select>
+
+    <h3 id="bookTitle" class="book-header">Génesis</h3>
+
+    <div class="pagination-bar">
+        <button id="btnPrevPage" class="btn-page" onclick="cambiarPagina(-1)">⏮️ Ant.</button>
+        <select id="pageSelect" class="page-select" onchange="irAPagina(this.value)"></select>
+        <button id="btnNextPage" class="btn-page" onclick="cambiarPagina(1)">Sig. ⏭️</button>
+    </div>
+
+    <div id="chaptersList" class="chapters-list"></div>
+</div>
+
+<div class="player-bar" id="playerBar" style="display: none;">
+    <span class="player-info" id="playerInfo">Reproduciendo...</span>
+    <audio id="audioPlayer" controls></audio>
+</div>
+
+<input type="file" id="fileInput" accept="audio/*,video/*" style="display: none;">
+
+<script>
+    // Registrar el Service Worker para permitir la instalación
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    const biblia = [
+        { nombre: "Génesis", capitulos: 50 }, { nombre: "Éxodo", capitulos: 40 }, { nombre: "Levítico", capitulos: 27 }, { nombre: "Números", capitulos: 36 }, { nombre: "Deuteronomio", capitulos: 34 }, { nombre: "Josué", capitulos: 24 }, { nombre: "Jueces", capitulos: 21 }, { nombre: "Rut", capitulos: 4 }, { nombre: "1 Samuel", capitulos: 31 }, { nombre: "2 Samuel", capitulos: 24 }, { nombre: "1 Reyes", capitulos: 22 }, { nombre: "2 Reyes", capitulos: 25 }, { nombre: "1 Crónicas", capitulos: 29 }, { nombre: "2 Crónicas", capitulos: 36 }, { nombre: "Esdras", capitulos: 10 }, { nombre: "Nehemías", capitulos: 13 }, { nombre: "Ester", capitulos: 10 }, { nombre: "Job", capitulos: 42 }, 
+        { nombre: "Salmos", capitulos: 150 }, { nombre: "Proverbios", capitulos: 31 }, 
+        { nombre: "Eclesiastés", capitulos: 12 }, { nombre: "Cantares", capitulos: 8 }, { nombre: "Isaías", capitulos: 66 }, { nombre: "Jeremías", capitulos: 52 }, { nombre: "Lamentaciones", capitulos: 5 }, { nombre: "Ezequiel", capitulos: 48 }, { nombre: "Daniel", capitulos: 12 }, { nombre: "Oseas", capitulos: 14 }, { nombre: "Joel", capitulos: 3 }, { nombre: "Amós", capitulos: 9 }, { nombre: "Abdías", capitulos: 1 }, { nombre: "Jonás", capitulos: 4 }, { nombre: "Miqueas", capitulos: 7 }, { nombre: "Nahúm", capitulos: 3 }, { nombre: "Habacuc", capitulos: 3 }, { nombre: "Sofonías", capitulos: 3 }, { nombre: "Hageo", capitulos: 2 }, { nombre: "Zacarías", capitulos: 14 }, { nombre: "Malaquías", capitulos: 4 }, { nombre: "Mateo", capitulos: 28 }, { nombre: "Marcos", capitulos: 16 }, { nombre: "Lucas", capitulos: 24 }, { nombre: "Juan", capitulos: 21 }, { nombre: "Hechos", capitulos: 28 }, { nombre: "Romanos", capitulos: 16 }, { nombre: "1 Corintios", capitulos: 16 }, { nombre: "2 Corintios", capitulos: 13 }, { nombre: "Gálatas", capitulos: 6 }, { nombre: "Efesios", capitulos: 6 }, { nombre: "Filipenses", capitulos: 4 }, { nombre: "Colosenses", capitulos: 4 }, { nombre: "1 Tesalonicenses", capitulos: 5 }, { nombre: "2 Tesalonicenses", capitulos: 3 }, { nombre: "1 Timoteo", capitulos: 6 }, { nombre: "2 Timoteo", capitulos: 4 }, { nombre: "Tito", capitulos: 3 }, { nombre: "Filemón", capitulos: 1 }, { nombre: "Hebreos", capitulos: 13 }, { nombre: "Santiago", capitulos: 5 }, { nombre: "1 Pedro", capitulos: 5 }, { nombre: "2 Pedro", capitulos: 3 }, { nombre: "1 Juan", capitulos: 5 }, { nombre: "2 Juan", capitulos: 1 }, { nombre: "3 Juan", capitulos: 1 }, { nombre: "Judas", capitulos: 1 }, { nombre: "Apocalipsis", capitulos: 22 }
+    ];
+
+    const CAPITULOS_POR_PAGINA = 5;
+    let paginaActual = 0;
+
+    let progresoFases = JSON.parse(localStorage.getItem('progresoFasesBiblia')) || {};
+    let db;
+
+    const dbRequest = indexedDB.open("BibliaAudiosDB", 1);
+    dbRequest.onupgradeneeded = (e) => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("audios")) db.createObjectStore("audios");
+    };
+    dbRequest.onsuccess = (e) => { db = e.target.result; init(); };
+
+    const bookSelect = document.getElementById('bookSelect');
+    const bookTitle = document.getElementById('bookTitle');
+    const chaptersList = document.getElementById('chaptersList');
+    const fileInput = document.getElementById('fileInput');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const playerBar = document.getElementById('playerBar');
+    const playerInfo = document.getElementById('playerInfo');
+    const pageSelect = document.getElementById('pageSelect');
+    const btnPrevPage = document.getElementById('btnPrevPage');
+    const btnNextPage = document.getElementById('btnNextPage');
+    const searchInput = document.getElementById('searchInput');
+
+    let targetKey = "";
+
+    function init() {
+        biblia.forEach((libro, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = libro.nombre;
+            bookSelect.appendChild(option);
+        });
+
+        bookSelect.addEventListener('change', (e) => {
+            paginaActual = 0;
+            cargarLibro(e.target.value);
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            ejecutarBusqueda(e.target.value.trim());
+        });
+
+        const ultimoLibro = localStorage.getItem('ultimoLibroVisto') || 0;
+        bookSelect.value = ultimoLibro;
+        cargarLibro(ultimoLibro);
+    }
+
+    function ejecutarBusqueda(texto) {
+        if (!texto) return;
+
+        if (!isNaN(texto)) {
+            const numCap = parseInt(texto);
+            const libro = biblia[bookSelect.value];
+            if (numCap >= 1 && numCap <= libro.capitulos) {
+                paginaActual = Math.floor((numCap - 1) / CAPITULOS_POR_PAGINA);
+                cargarLibro(bookSelect.value);
+            }
+            return;
+        }
+
+        const indexLibro = biblia.findIndex(l => l.nombre.toLowerCase().includes(texto.toLowerCase()));
+        if (indexLibro !== -1) {
+            bookSelect.value = indexLibro;
+            paginaActual = 0;
+            cargarLibro(indexLibro);
+        }
+    }
+
+    function irALibro(nombreLibro) {
+        const index = biblia.findIndex(l => l.nombre === nombreLibro);
+        if (index !== -1) {
+            bookSelect.value = index;
+            paginaActual = 0;
+            searchInput.value = '';
+            cargarLibro(index);
+        }
+    }
+
+    function cargarLibro(index) {
+        const libro = biblia[index];
+        bookTitle.textContent = libro.nombre;
+        localStorage.setItem('ultimoLibroVisto', index);
+
+        const totalPaginas = Math.ceil(libro.capitulos / CAPITULOS_POR_PAGINA);
+        
+        pageSelect.innerHTML = '';
+        for (let p = 0; p < totalPaginas; p++) {
+            const inicio = p * CAPITULOS_POR_PAGINA + 1;
+            const fin = Math.min((p + 1) * CAPITULOS_POR_PAGINA, libro.capitulos);
+            const opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = `Cap. ${inicio} - ${fin}`;
+            if (p === paginaActual) opt.selected = true;
+            pageSelect.appendChild(opt);
+        }
+
+        btnPrevPage.disabled = (paginaActual === 0);
+        btnNextPage.disabled = (paginaActual >= totalPaginas - 1);
+
+        renderizarCapitulos(libro);
+    }
+
+    function cambiarPagina(delta) {
+        paginaActual += delta;
+        cargarLibro(bookSelect.value);
+    }
+
+    function irAPagina(p) {
+        paginaActual = parseInt(p);
+        cargarLibro(bookSelect.value);
+    }
+
+    function renderizarCapitulos(libro) {
+        chaptersList.innerHTML = '';
+        const libroData = progresoFases[libro.nombre] || {};
+
+        const inicio = paginaActual * CAPITULOS_POR_PAGINA + 1;
+        const fin = Math.min((paginaActual + 1) * CAPITULOS_POR_PAGINA, libro.capitulos);
+
+        for (let i = inicio; i <= fin; i++) {
+            const row = document.createElement('div');
+            row.className = 'cap-row';
+
+            const header = document.createElement('div');
+            header.className = 'cap-header';
+
+            const numSpan = document.createElement('span');
+            numSpan.className = 'cap-num';
+            numSpan.textContent = `Capítulo ${i}`;
+            header.appendChild(numSpan);
+
+            const fasesContainer = document.createElement('div');
+            fasesContainer.className = 'fases-container';
+
+            ['L', 'M', 'E'].forEach(fase => {
+                const fBtn = document.createElement('button');
+                fBtn.className = 'fase-btn';
+                fBtn.textContent = fase;
+
+                const fasesCompletadas = libroData[i] || [];
+                if (fasesCompletadas.includes(fase)) {
+                    fBtn.classList.add(`active-${fase}`);
+                }
+
+                fBtn.addEventListener('click', () => toggleFase(libro.nombre, i, fase, fBtn));
+                fasesContainer.appendChild(fBtn);
+            });
+
+            header.appendChild(fasesContainer);
+            row.appendChild(header);
+
+            const audioBox = document.createElement('div');
+            audioBox.className = 'audio-links';
+            audioBox.appendChild(crearControlAudio(libro.nombre, i, 'M', '🎧 Audiolibro (M)'));
+            audioBox.appendChild(crearControlAudio(libro.nombre, i, 'E', '📚 Explicación (E)'));
+
+            row.appendChild(audioBox);
+            chaptersList.appendChild(row);
+        }
+    }
+
+    function crearControlAudio(libro, cap, tipo, label) {
+        const div = document.createElement('div');
+        div.className = 'audio-item';
+
+        const span = document.createElement('span');
+        span.textContent = label;
+        div.appendChild(span);
+
+        const btnContainer = document.createElement('div');
+        const key = `${libro}_${cap}_${tipo}`;
+
+        const tx = db.transaction("audios", "readonly");
+        const store = tx.objectStore("audios");
+        const req = store.get(key);
+
+        req.onsuccess = () => {
+            if (req.result) {
+                const btnPlay = document.createElement('button');
+                btnPlay.className = 'btn-play';
+                btnPlay.textContent = '▶️ Escuchar';
+                btnPlay.onclick = () => reproducirAudio(key, `${libro} Cap. ${cap} (${tipo === 'M' ? 'Memorización' : 'Estudio'})`);
+
+                const btnChange = document.createElement('button');
+                btnChange.className = 'btn-file';
+                btnChange.textContent = '📁 Cambiar';
+                btnChange.onclick = () => seleccionarArchivo(key);
+
+                btnContainer.appendChild(btnPlay);
+                btnContainer.appendChild(btnChange);
+            } else {
+                const btnLoad = document.createElement('button');
+                btnLoad.className = 'btn-file';
+                btnLoad.textContent = '📁 Vincular MP3';
+                btnLoad.onclick = () => seleccionarArchivo(key);
+                btnContainer.appendChild(btnLoad);
+            }
+        };
+
+        div.appendChild(btnContainer);
+        return div;
+    }
+
+    function seleccionarArchivo(key) {
+        targetKey = key;
+        fileInput.click();
+    }
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file && targetKey) {
+            const tx = db.transaction("audios", "readwrite");
+            const store = tx.objectStore("audios");
+            store.put(file, targetKey);
+
+            tx.oncomplete = () => {
+                cargarLibro(bookSelect.value);
+            };
+        }
+    });
+
+    function reproducirAudio(key, titulo) {
+        const tx = db.transaction("audios", "readonly");
+        const store = tx.objectStore("audios");
+        const req = store.get(key);
+
+        req.onsuccess = () => {
+            const blob = req.result;
+            if (blob) {
+                const audioURL = URL.createObjectURL(blob);
+                audioPlayer.src = audioURL;
+                playerInfo.textContent = titulo;
+                playerBar.style.display = 'flex';
+                audioPlayer.play();
+            }
+        };
+    }
+
+    function toggleFase(libroNombre, capituloNum, fase, boton) {
+        if (!progresoFases[libroNombre]) progresoFases[libroNombre] = {};
+        if (!progresoFases[libroNombre][capituloNum]) progresoFases[libroNombre][capituloNum] = [];
+
+        const listaFases = progresoFases[libroNombre][capituloNum];
+        const idx = listaFases.indexOf(fase);
+
+        if (idx > -1) {
+            listaFases.splice(idx, 1);
+            boton.classList.remove(`active-${fase}`);
+        } else {
+            listaFases.push(fase);
+            boton.classList.add(`active-${fase}`);
+        }
+
+        if (listaFases.length === 0) delete progresoFases[libroNombre][capituloNum];
+        if (Object.keys(progresoFases[libroNombre]).length === 0) delete progresoFases[libroNombre];
+
+        localStorage.setItem('progresoFasesBiblia', JSON.stringify(progresoFases));
+    }
+</script>
+
+</body>
+</html>
